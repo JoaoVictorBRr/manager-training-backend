@@ -1,0 +1,6 @@
+@Zyntra.WebApi_HostAddress = http://localhost:5272
+
+GET {{Zyntra.WebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

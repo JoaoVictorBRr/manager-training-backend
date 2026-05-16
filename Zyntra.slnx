@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="Zyntra.CrossCutting/Zyntra.CrossCutting.csproj" />
+  <Project Path="Zyntra.Data/Zyntra.Data.csproj" />
+  <Project Path="Zyntra.Domain/Zyntra.Domain.csproj" />
+  <Project Path="Zyntra.Service/Zyntra.Service.csproj" />
+  <Project Path="Zyntra.Shared/Zyntra.Shared.csproj" />
+  <Project Path="Zyntra.WebApi/Zyntra.WebApi.csproj" />
+</Solution>

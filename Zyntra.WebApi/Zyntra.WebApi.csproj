@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+	<ItemGroup>
+		<!-- ASP.NET Core and Authentication -->
+		<PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
+		<PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="8.1.1" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
+
+		<!-- Swagger/OpenAPI -->
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.1" />
+
+		<!-- Logging -->
+		<PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
+		<PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+
+		<!-- Entity Framework Core -->
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.10">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+
+		<!-- Utilities -->
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="10.0.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Project References -->
+		<ProjectReference Include="..\Zyntra.Domain\Zyntra.Domain.csproj" />
+		<ProjectReference Include="..\Zyntra.Data\Zyntra.Data.csproj" />
+		<ProjectReference Include="..\Zyntra.Service\Zyntra.Service.csproj" />
+		<ProjectReference Include="..\Zyntra.CrossCutting\Zyntra.CrossCutting.csproj" />
+		<ProjectReference Include="..\Zyntra.Shared\Zyntra.Shared.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="Services\" />
+		<Folder Include="Log\" />
+		<Folder Include="wwwroot\uploads\importacao\" />
+	</ItemGroup>
+
+</Project>
