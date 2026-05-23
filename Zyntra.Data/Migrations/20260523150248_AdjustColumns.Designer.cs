@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Zyntra.Data.Context;
 
@@ -11,9 +12,11 @@ using Zyntra.Data.Context;
 namespace Zyntra.Data.Migrations
 {
     [DbContext(typeof(ZyntraContext))]
-    partial class ZyntraContextModelSnapshot : ModelSnapshot
+    [Migration("20260523150248_AdjustColumns")]
+    partial class AdjustColumns
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

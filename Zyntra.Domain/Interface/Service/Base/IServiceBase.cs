@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using FluentValidation.Results;
 
 namespace Zyntra.Domain.Interface.Service.Base;
 public interface IServiceBase<TEntity> where TEntity : class
@@ -14,4 +15,5 @@ public interface IServiceBase<TEntity> where TEntity : class
     Task<TEntity> GetAsync(Expression<Func<TEntity, bool>> predicate);
     Task DeleteRangeAsync(IList<TEntity> entities);
     Task<IList<TEntity>> AddRangeListAsync(IList<TEntity> entities);
+    Task<List<ValidationFailure>> Validate(TEntity entity);
 }

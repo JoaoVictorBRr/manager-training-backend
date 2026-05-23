@@ -9,5 +9,7 @@ namespace Zyntra.Domain.Interface.Service;
 public interface IStudentService : IServiceBase<Student>
 {
     Task<PagedListDto<Student>> FilterAllStudents(StudentRequestListDto filter);
+    Task<Student?> GetByUserIdAsync(long userId);
     Task<List<ValidationFailure>> Validate(Student entity);
+    Task<Student> SaveOnboardingAsync(long userId, SaveOnboardingDto dto);
 }

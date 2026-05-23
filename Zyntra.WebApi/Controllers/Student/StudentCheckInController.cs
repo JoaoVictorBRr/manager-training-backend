@@ -16,6 +16,24 @@ public class StudentCheckInController(
     ICheckInService checkInService,
     IMapper mapper) : ControllerBase
 {
+    [HttpGet("history/{studentId}")]
+    [SwaggerOperation(Summary = "Listar histórico de check-ins do aluno")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetHistory(long studentId)
+    {
+        try
+        {
+            var result = await checkInService.GetAllAsync(c => c.StudentId == studentId);
+            return Ok(mapper.Map<IEnumerable<CheckInResponseDto>>(result));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new ErrorResponse { Type = "InternalServerError", Message = ex.Message, StatusCode = 500 });
+        }
+    }
+
     [HttpPost("check-in")]
     [SwaggerOperation(Summary = "Realizar check-in na academia")]
     [ProducesResponseType(typeof(CheckInResponseDto), StatusCodes.Status200OK)]

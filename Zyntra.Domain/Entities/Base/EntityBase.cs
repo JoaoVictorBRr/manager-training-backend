@@ -12,5 +12,5 @@ public class EntityBase
     public long? UserIdModified { get; set; }
     public DateTime? DateDeleted { get; set; }
     public long? UserIdDeleted { get; set; }
-    public string Observation { get; set; }
+    public string Observation { get; set; } = string.Empty;
 }

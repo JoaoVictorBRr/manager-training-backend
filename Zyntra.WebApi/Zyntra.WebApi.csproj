@@ -6,6 +6,21 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="Log\**" />
+    <Compile Remove="Services\**" />
+    <Compile Remove="wwwroot\**" />
+    <Content Remove="Log\**" />
+    <Content Remove="Services\**" />
+    <Content Remove="wwwroot\**" />
+    <EmbeddedResource Remove="Log\**" />
+    <EmbeddedResource Remove="Services\**" />
+    <EmbeddedResource Remove="wwwroot\**" />
+    <None Remove="Log\**" />
+    <None Remove="Services\**" />
+    <None Remove="wwwroot\**" />
+  </ItemGroup>
+
 	<ItemGroup>
 		<!-- ASP.NET Core and Authentication -->
 		<PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
@@ -38,12 +53,6 @@
 		<ProjectReference Include="..\Zyntra.Service\Zyntra.Service.csproj" />
 		<ProjectReference Include="..\Zyntra.CrossCutting\Zyntra.CrossCutting.csproj" />
 		<ProjectReference Include="..\Zyntra.Shared\Zyntra.Shared.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Folder Include="Services\" />
-		<Folder Include="Log\" />
-		<Folder Include="wwwroot\uploads\importacao\" />
 	</ItemGroup>
 
 </Project>

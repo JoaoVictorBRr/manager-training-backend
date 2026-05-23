@@ -1,4 +1,5 @@
-﻿using FluentValidation.Results;
+using FluentValidation;
+using FluentValidation.Results;
 using System.Linq.Expressions;
 using Zyntra.Domain.Dtos.Pagination;
 using Zyntra.Domain.Dtos.UserDto.List;
@@ -8,76 +9,48 @@ using Zyntra.Domain.Interface.Service;
 
 namespace Zyntra.Service.Service;
 
-public class UserService(IUserRepository userRepository) : IUserService
+public class UserService(IUserRepository repo, IValidator<User> validator) : IUserService
 {
-    private readonly IUserRepository _userRepository = userRepository;
-    public Task<User> AddAsync(User entity)
+    private readonly IUserRepository _repo = repo ?? throw new ArgumentNullException(nameof(repo));
+    private readonly IValidator<User> _validator = validator ?? throw new ArgumentNullException(nameof(validator));
+
+    public async Task<User> AddAsync(User entity)
     {
-        throw new NotImplementedException();
+        _ = entity ?? throw new ArgumentNullException(nameof(entity));
+        var errors = await Validate(entity);
+        if (errors is { } && errors.Any()) throw new ValidationException(errors);
+        return await _repo.AddAsync(entity);
     }
 
-    public Task AddRangeAsync(IList<User> entity)
+    public async Task<User> UpdateAsync(User entity)
     {
-        throw new NotImplementedException();
+        _ = entity ?? throw new ArgumentNullException(nameof(entity));
+        var errors = await Validate(entity);
+        if (errors is { } && errors.Any()) throw new ValidationException(errors);
+        return await _repo.UpdateAsync(entity);
     }
 
-    public Task<IList<User>> AddRangeListAsync(IList<User> entities)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<User> DeleteAsync(User entity)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<User> DeleteAsync(long Id)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task DeleteRangeAsync(IList<User> entities)
-    {
-        throw new NotImplementedException();
-    }
+    public Task AddRangeAsync(IList<User> entity) => _repo.AddRangeAsync(entity);
+    public Task<IList<User>> AddRangeListAsync(IList<User> entities) => _repo.AddRangeListAsync(entities);
+    public Task UpdateRangeAsync(IEnumerable<User> entity) => _repo.UpdateRangeAsync(entity);
+    public Task<User> DeleteAsync(User entity) => _repo.DeleteAsync(entity);
+    public Task<User> DeleteAsync(long Id) => _repo.DeleteAsync(Id);
+    public Task DeleteRangeAsync(IList<User> entities) => _repo.DeleteRangeAsync(entities);
+    public Task<User> GetByIdAsync(long Id) => _repo.GetByIdAsync(Id);
+    public Task<IEnumerable<User>> GetAllAsync(Expression<Func<User, bool>> predicate) => _repo.GetAllAsync(predicate);
+    public Task<User> GetAsync(Expression<Func<User, bool>> predicate) => _repo.GetAsync(predicate);
 
     public Task<PagedListDto<User>> FilterAllUsers(UseRequestListDto userFilter)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<IEnumerable<User>> GetAllAsync(Expression<Func<User, bool>> predicate)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<User> GetAsync(Expression<Func<User, bool>> predicate)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<User> GetByIdAsync(long Id)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<User> UpdateAsync(User entity)
-    {
-        throw new NotImplementedException();
-    }
+        => _repo.FilterAllUsers(userFilter);
 
     public Task<User> UpdatePasswordAsync(User entity)
-    {
-        throw new NotImplementedException();
-    }
+        => _repo.UpdateAsync(entity);
 
-    public Task UpdateRangeAsync(IEnumerable<User> entity)
+    public async Task<List<ValidationFailure>> Validate(User entity)
     {
-        throw new NotImplementedException();
-    }
-
-    public Task<List<ValidationFailure>> Validate(User entity)
-    {
-        throw new NotImplementedException();
+        var errors = new List<ValidationFailure>();
+        var validation = _validator.Validate(entity);
+        if (!validation.IsValid) errors.AddRange(validation.Errors);
+        return await Task.FromResult(errors);
     }
 }
