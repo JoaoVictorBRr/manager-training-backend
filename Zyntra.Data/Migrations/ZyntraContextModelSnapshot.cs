@@ -45,7 +45,6 @@ namespace Zyntra.Data.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Observation")
-                        .IsRequired()
                         .HasMaxLength(2000)
                         .HasColumnType("varchar(2000)");
 
@@ -69,6 +68,70 @@ namespace Zyntra.Data.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Administrator", (string)null);
+                });
+
+            modelBuilder.Entity("Zyntra.Domain.Entities.AiChatMessage", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("ActionJson")
+                        .HasMaxLength(4000)
+                        .HasColumnType("varchar(4000)");
+
+                    b.Property<string>("ActionStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasDefaultValue("none");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(8000)
+                        .HasColumnType("varchar(8000)");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DateDeleted")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DateModified")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Observation")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<int>("Situation")
+                        .HasColumnType("int");
+
+                    b.Property<long>("StudentId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("UserIdCreated")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("UserIdDeleted")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("UserIdModified")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentId");
+
+                    b.ToTable("AiChatMessage", (string)null);
                 });
 
             modelBuilder.Entity("Zyntra.Domain.Entities.ChatMessage", b =>
@@ -105,7 +168,6 @@ namespace Zyntra.Data.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Observation")
-                        .IsRequired()
                         .HasMaxLength(2000)
                         .HasColumnType("varchar(2000)");
 
@@ -157,7 +219,6 @@ namespace Zyntra.Data.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Observation")
-                        .IsRequired()
                         .HasMaxLength(2000)
                         .HasColumnType("varchar(2000)");
 
@@ -183,6 +244,9 @@ namespace Zyntra.Data.Migrations
 
                     b.Property<int>("ValidationStatus")
                         .HasColumnType("int");
+
+                    b.Property<string>("WorkoutDayPerformed")
+                        .HasColumnType("longtext");
 
                     b.HasKey("Id");
 
@@ -226,7 +290,6 @@ namespace Zyntra.Data.Migrations
                         .HasColumnType("varchar(80)");
 
                     b.Property<string>("Observation")
-                        .IsRequired()
                         .HasMaxLength(2000)
                         .HasColumnType("varchar(2000)");
 
@@ -254,6 +317,230 @@ namespace Zyntra.Data.Migrations
                     b.ToTable("Class", (string)null);
                 });
 
+            modelBuilder.Entity("Zyntra.Domain.Entities.DietMeal", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DateDeleted")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DateModified")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("MealType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Observation")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("Situation")
+                        .HasColumnType("int");
+
+                    b.Property<long>("StudentDietId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("UserIdCreated")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("UserIdDeleted")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("UserIdModified")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentDietId");
+
+                    b.ToTable("DietMeal");
+                });
+
+            modelBuilder.Entity("Zyntra.Domain.Entities.DietMealOption", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("Calories")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Carbs")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DateDeleted")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DateModified")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long>("DietMealId")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("Fat")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<string>("FoodName")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Ingredients")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Observation")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("PreparationMethod")
+                        .HasColumnType("longtext");
+
+                    b.Property<decimal>("Protein")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<string>("Quantity")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("Situation")
+                        .HasColumnType("int");
+
+                    b.Property<long>("UserIdCreated")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("UserIdDeleted")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("UserIdModified")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DietMealId");
+
+                    b.ToTable("DietMealOption");
+                });
+
+            modelBuilder.Entity("Zyntra.Domain.Entities.DietMealPhoto", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DateDeleted")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DateModified")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long>("DietMealOptionId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ImagePath")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Observation")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("Situation")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long>("UserIdCreated")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("UserIdDeleted")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("UserIdModified")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DietMealOptionId");
+
+                    b.ToTable("DietMealPhoto");
+                });
+
+            modelBuilder.Entity("Zyntra.Domain.Entities.EvolutionPhoto", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DateDeleted")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DateModified")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("ImagePath")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Observation")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("Situation")
+                        .HasColumnType("int");
+
+                    b.Property<long>("StudentId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("TakenAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long>("UserIdCreated")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("UserIdDeleted")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("UserIdModified")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentId");
+
+                    b.ToTable("EvolutionPhoto");
+                });
+
             modelBuilder.Entity("Zyntra.Domain.Entities.Exercise", b =>
                 {
                     b.Property<long>("Id")
@@ -278,9 +565,17 @@ namespace Zyntra.Data.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasMaxLength(1000)
                         .HasColumnType("varchar(1000)");
+
+                    b.Property<string>("Difficulty")
+                        .HasColumnType("longtext");
+
+                    b.Property<int?>("EstimatedCalories")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ExerciseType")
+                        .HasColumnType("int");
 
                     b.Property<bool>("IsDropset")
                         .HasColumnType("tinyint(1)");
@@ -296,7 +591,6 @@ namespace Zyntra.Data.Migrations
                         .HasColumnType("varchar(100)");
 
                     b.Property<string>("Observation")
-                        .IsRequired()
                         .HasMaxLength(2000)
                         .HasColumnType("varchar(2000)");
 
@@ -336,9 +630,12 @@ namespace Zyntra.Data.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<string>("VideoUrl")
-                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("varchar(500)");
+
+                    b.Property<string>("WorkoutDay")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<long>("WorkoutSheetId")
                         .HasColumnType("bigint");
@@ -348,6 +645,126 @@ namespace Zyntra.Data.Migrations
                     b.HasIndex("WorkoutSheetId");
 
                     b.ToTable("Exercise", (string)null);
+                });
+
+            modelBuilder.Entity("Zyntra.Domain.Entities.ExerciseLog", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CompletedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DateDeleted")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DateModified")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("DistanceMeters")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("DurationSeconds")
+                        .HasColumnType("int");
+
+                    b.Property<long>("ExerciseId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ExerciseName")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Observation")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("RepsJson")
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("SetsCompleted")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Situation")
+                        .HasColumnType("int");
+
+                    b.Property<long>("UserIdCreated")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("UserIdDeleted")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("UserIdModified")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("WeightsJson")
+                        .HasColumnType("longtext");
+
+                    b.Property<long>("WorkoutSessionId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WorkoutSessionId");
+
+                    b.ToTable("ExerciseLog");
+                });
+
+            modelBuilder.Entity("Zyntra.Domain.Entities.HydrationLog", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<decimal>("AmountMl")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DateDeleted")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DateModified")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("LogDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Observation")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("Situation")
+                        .HasColumnType("int");
+
+                    b.Property<long>("StudentId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("UserIdCreated")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("UserIdDeleted")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("UserIdModified")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentId");
+
+                    b.ToTable("HydrationLog");
                 });
 
             modelBuilder.Entity("Zyntra.Domain.Entities.Instructor", b =>
@@ -373,7 +790,6 @@ namespace Zyntra.Data.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Observation")
-                        .IsRequired()
                         .HasMaxLength(2000)
                         .HasColumnType("varchar(2000)");
 
@@ -435,7 +851,6 @@ namespace Zyntra.Data.Migrations
                         .HasColumnType("varchar(500)");
 
                     b.Property<string>("Observation")
-                        .IsRequired()
                         .HasMaxLength(2000)
                         .HasColumnType("varchar(2000)");
 
@@ -493,7 +908,6 @@ namespace Zyntra.Data.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Observation")
-                        .IsRequired()
                         .HasMaxLength(2000)
                         .HasColumnType("varchar(2000)");
 
@@ -555,7 +969,6 @@ namespace Zyntra.Data.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Observation")
-                        .IsRequired()
                         .HasMaxLength(2000)
                         .HasColumnType("varchar(2000)");
 
@@ -563,7 +976,6 @@ namespace Zyntra.Data.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("PaymentMethod")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("varchar(50)");
 
@@ -625,17 +1037,14 @@ namespace Zyntra.Data.Migrations
                         .HasColumnType("decimal(5,2)");
 
                     b.Property<string>("Measurements")
-                        .IsRequired()
                         .HasMaxLength(1000)
                         .HasColumnType("varchar(1000)");
 
                     b.Property<string>("Notes")
-                        .IsRequired()
                         .HasMaxLength(2000)
                         .HasColumnType("varchar(2000)");
 
                     b.Property<string>("Observation")
-                        .IsRequired()
                         .HasMaxLength(2000)
                         .HasColumnType("varchar(2000)");
 
@@ -686,7 +1095,6 @@ namespace Zyntra.Data.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Observation")
-                        .IsRequired()
                         .HasMaxLength(2000)
                         .HasColumnType("varchar(2000)");
 
@@ -728,6 +1136,9 @@ namespace Zyntra.Data.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
 
+                    b.Property<string>("AvatarUrl")
+                        .HasColumnType("longtext");
+
                     b.Property<DateTime>("BirthDate")
                         .HasColumnType("datetime(6)");
 
@@ -758,11 +1169,13 @@ namespace Zyntra.Data.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("PaymentStatus")
-                        .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("varchar(30)");
 
                     b.Property<int>("Situation")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SubscriptionPlan")
                         .HasColumnType("int");
 
                     b.Property<long>("UserId")
@@ -784,6 +1197,117 @@ namespace Zyntra.Data.Migrations
                     b.ToTable("Student", (string)null);
                 });
 
+            modelBuilder.Entity("Zyntra.Domain.Entities.StudentAchievement", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("AchievementKey")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DateDeleted")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DateModified")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Icon")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Observation")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("Situation")
+                        .HasColumnType("int");
+
+                    b.Property<long>("StudentId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("UnlockedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long>("UserIdCreated")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("UserIdDeleted")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("UserIdModified")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentId");
+
+                    b.ToTable("StudentAchievement");
+                });
+
+            modelBuilder.Entity("Zyntra.Domain.Entities.StudentDiet", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DateDeleted")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DateModified")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("GeneratedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Observation")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("Situation")
+                        .HasColumnType("int");
+
+                    b.Property<long>("StudentId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("UserIdCreated")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("UserIdDeleted")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("UserIdModified")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentId");
+
+                    b.ToTable("StudentDiet");
+                });
+
             modelBuilder.Entity("Zyntra.Domain.Entities.User", b =>
                 {
                     b.Property<long>("Id")
@@ -793,8 +1317,8 @@ namespace Zyntra.Data.Migrations
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<string>("CellphoneNumber")
-                        .IsRequired()
-                        .HasColumnType("longtext");
+                        .HasMaxLength(15)
+                        .HasColumnType("varchar(15)");
 
                     b.Property<string>("Cpf")
                         .IsRequired()
@@ -846,7 +1370,6 @@ namespace Zyntra.Data.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Token")
-                        .IsRequired()
                         .HasMaxLength(1000)
                         .HasColumnType("varchar(1000)");
 
@@ -888,7 +1411,6 @@ namespace Zyntra.Data.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Observation")
-                        .IsRequired()
                         .HasMaxLength(2000)
                         .HasColumnType("varchar(2000)");
 
@@ -917,6 +1439,62 @@ namespace Zyntra.Data.Migrations
                     b.HasIndex("StudentId");
 
                     b.ToTable("WaitList", (string)null);
+                });
+
+            modelBuilder.Entity("Zyntra.Domain.Entities.WorkoutSession", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("CheckInId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DateDeleted")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("DateModified")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("FinishedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Observation")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("Situation")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long>("StudentId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("UserIdCreated")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("UserIdDeleted")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("UserIdModified")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("WorkoutDay")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentId");
+
+                    b.ToTable("WorkoutSession");
                 });
 
             modelBuilder.Entity("Zyntra.Domain.Entities.WorkoutSheet", b =>
@@ -995,6 +1573,17 @@ namespace Zyntra.Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Zyntra.Domain.Entities.AiChatMessage", b =>
+                {
+                    b.HasOne("Zyntra.Domain.Entities.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Student");
+                });
+
             modelBuilder.Entity("Zyntra.Domain.Entities.ChatMessage", b =>
                 {
                     b.HasOne("Zyntra.Domain.Entities.Instructor", "Instructor")
@@ -1036,6 +1625,50 @@ namespace Zyntra.Data.Migrations
                     b.Navigation("Instructor");
                 });
 
+            modelBuilder.Entity("Zyntra.Domain.Entities.DietMeal", b =>
+                {
+                    b.HasOne("Zyntra.Domain.Entities.StudentDiet", "StudentDiet")
+                        .WithMany("Meals")
+                        .HasForeignKey("StudentDietId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("StudentDiet");
+                });
+
+            modelBuilder.Entity("Zyntra.Domain.Entities.DietMealOption", b =>
+                {
+                    b.HasOne("Zyntra.Domain.Entities.DietMeal", "DietMeal")
+                        .WithMany("Options")
+                        .HasForeignKey("DietMealId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DietMeal");
+                });
+
+            modelBuilder.Entity("Zyntra.Domain.Entities.DietMealPhoto", b =>
+                {
+                    b.HasOne("Zyntra.Domain.Entities.DietMealOption", "DietMealOption")
+                        .WithMany("Photos")
+                        .HasForeignKey("DietMealOptionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DietMealOption");
+                });
+
+            modelBuilder.Entity("Zyntra.Domain.Entities.EvolutionPhoto", b =>
+                {
+                    b.HasOne("Zyntra.Domain.Entities.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Student");
+                });
+
             modelBuilder.Entity("Zyntra.Domain.Entities.Exercise", b =>
                 {
                     b.HasOne("Zyntra.Domain.Entities.WorkoutSheet", "WorkoutSheet")
@@ -1045,6 +1678,28 @@ namespace Zyntra.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("WorkoutSheet");
+                });
+
+            modelBuilder.Entity("Zyntra.Domain.Entities.ExerciseLog", b =>
+                {
+                    b.HasOne("Zyntra.Domain.Entities.WorkoutSession", "WorkoutSession")
+                        .WithMany("ExerciseLogs")
+                        .HasForeignKey("WorkoutSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("WorkoutSession");
+                });
+
+            modelBuilder.Entity("Zyntra.Domain.Entities.HydrationLog", b =>
+                {
+                    b.HasOne("Zyntra.Domain.Entities.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Student");
                 });
 
             modelBuilder.Entity("Zyntra.Domain.Entities.Instructor", b =>
@@ -1121,6 +1776,28 @@ namespace Zyntra.Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Zyntra.Domain.Entities.StudentAchievement", b =>
+                {
+                    b.HasOne("Zyntra.Domain.Entities.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("Zyntra.Domain.Entities.StudentDiet", b =>
+                {
+                    b.HasOne("Zyntra.Domain.Entities.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Student");
+                });
+
             modelBuilder.Entity("Zyntra.Domain.Entities.WaitList", b =>
                 {
                     b.HasOne("Zyntra.Domain.Entities.Class", "Class")
@@ -1136,6 +1813,17 @@ namespace Zyntra.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Class");
+
+                    b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("Zyntra.Domain.Entities.WorkoutSession", b =>
+                {
+                    b.HasOne("Zyntra.Domain.Entities.Student", "Student")
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Student");
                 });
@@ -1164,6 +1852,26 @@ namespace Zyntra.Data.Migrations
                     b.Navigation("Schedules");
 
                     b.Navigation("WaitLists");
+                });
+
+            modelBuilder.Entity("Zyntra.Domain.Entities.DietMeal", b =>
+                {
+                    b.Navigation("Options");
+                });
+
+            modelBuilder.Entity("Zyntra.Domain.Entities.DietMealOption", b =>
+                {
+                    b.Navigation("Photos");
+                });
+
+            modelBuilder.Entity("Zyntra.Domain.Entities.StudentDiet", b =>
+                {
+                    b.Navigation("Meals");
+                });
+
+            modelBuilder.Entity("Zyntra.Domain.Entities.WorkoutSession", b =>
+                {
+                    b.Navigation("ExerciseLogs");
                 });
 
             modelBuilder.Entity("Zyntra.Domain.Entities.WorkoutSheet", b =>

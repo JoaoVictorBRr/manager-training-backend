@@ -15,7 +15,7 @@ public class PartnerIntegrationMap : IEntityTypeConfiguration<PartnerIntegration
         builder.Property(p => p.IntegrationType).IsRequired();
         builder.Property(p => p.Token).IsRequired().HasMaxLength(500);
         builder.Property(p => p.ValidationStatus).IsRequired();
-        builder.Property(p => p.Observation).HasMaxLength(2000);
+        builder.Property(p => p.Observation).IsRequired(false).HasMaxLength(2000);
 
         builder.HasIndex(p => p.Token).IsUnique();
     }

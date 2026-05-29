@@ -47,7 +47,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-    ?? ["http://localhost:5173", "http://localhost:3000"];
+    ?? ["http://localhost:5173", "http://localhost:5174", "http://localhost:3000"];
 
 builder.Services.AddCors(options =>
 {
@@ -84,8 +84,8 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Zyntra API v1"));
 
+app.UseStaticFiles();
 app.UseCors("FrontendPolicy");
-app.UseHttpsRedirection();
 app.UseMiddleware<ExceptionHandlerMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();

@@ -1,4 +1,5 @@
 using Zyntra.Domain.Entities.Base;
+using Zyntra.Domain.Enum;
 
 namespace Zyntra.Domain.Entities;
 
@@ -19,6 +20,10 @@ public class Exercise : EntityBase
     public int? RIR { get; set; }
     public string? Cadence { get; set; }
     public string? AdvancedTechniques { get; set; }
+    public string? Difficulty { get; set; }
+    public int? EstimatedCalories { get; set; }
+    public string WorkoutDay { get; set; } = "A";
+    public ExerciseType ExerciseType { get; set; } = ExerciseType.WeightTraining;
 
     public WorkoutSheet WorkoutSheet { get; set; }
 }

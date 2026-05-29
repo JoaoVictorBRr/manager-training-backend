@@ -33,6 +33,29 @@ public class SharedNotificationController(
         }
     }
 
+    [HttpPut("mark-all-as-read/{userId}")]
+    [SwaggerOperation(Summary = "Marcar todas as notificações do usuário como lidas")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> MarkAllAsRead(long userId)
+    {
+        try
+        {
+            var notifications = await notificationService.GetAllAsync(n => n.UserId == userId && !n.IsRead);
+            foreach (var n in notifications)
+            {
+                n.IsRead = true;
+                await notificationService.UpdateAsync(n);
+            }
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new ErrorResponse { Type = "InternalServerError", Message = ex.Message, StatusCode = 500 });
+        }
+    }
+
     [HttpPut("mark-as-read/{id}")]
     [SwaggerOperation(Summary = "Marcar notificação como lida")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

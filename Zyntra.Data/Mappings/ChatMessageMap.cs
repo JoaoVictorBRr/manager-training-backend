@@ -14,7 +14,7 @@ public class ChatMessageMap : IEntityTypeConfiguration<ChatMessage>
         builder.Property(c => c.Message).IsRequired().HasMaxLength(2000);
         builder.Property(c => c.MessageDateTime).IsRequired();
         builder.Property(c => c.IsRead).IsRequired().HasDefaultValue(false);
-        builder.Property(c => c.Observation).HasMaxLength(2000);
+        builder.Property(c => c.Observation).IsRequired(false).HasMaxLength(2000);
 
         builder.HasOne(c => c.Student)
             .WithMany()

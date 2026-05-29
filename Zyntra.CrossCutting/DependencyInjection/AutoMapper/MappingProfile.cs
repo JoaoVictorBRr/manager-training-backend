@@ -9,6 +9,7 @@ using Zyntra.Domain.Dtos.PaymentDto;
 using Zyntra.Domain.Dtos.PhysicalAssessmentDto;
 using Zyntra.Domain.Dtos.ScheduleDto;
 using Zyntra.Domain.Dtos.StudentDto;
+using Zyntra.Domain.Dtos.WorkoutSessionDto;
 using Zyntra.Domain.Dtos.WorkoutSheetDto;
 using Zyntra.Domain.Entities;
 
@@ -38,7 +39,10 @@ public class MappingProfile : Profile
         CreateMap<Schedule, ScheduleResponseDto>()
             .ForMember(d => d.StudentName, o => o.MapFrom(s => s.Student.User.Name))
             .ForMember(d => d.ClassModality, o => o.MapFrom(s => s.Class.Modality))
-            .ForMember(d => d.ClassDateTime, o => o.MapFrom(s => s.Class.DateTime));
+            .ForMember(d => d.ClassDateTime, o => o.MapFrom(s => s.Class.DateTime))
+            .ForMember(d => d.ClassUnit, o => o.MapFrom(s => s.Class.Unit))
+            .ForMember(d => d.InstructorName, o => o.MapFrom(s => s.Class.Instructor.User.Name))
+            .ForMember(d => d.ReservationDate, o => o.MapFrom(s => s.DateCreated));
 
         CreateMap<CheckIn, CheckInResponseDto>()
             .ForMember(d => d.StudentName, o => o.MapFrom(s => s.Student.User.Name));
@@ -63,5 +67,10 @@ public class MappingProfile : Profile
             .ForMember(d => d.InstructorName, o => o.MapFrom(s => s.Instructor.User.Name));
 
         CreateMap<Notification, NotificationResponseDto>();
+
+        CreateMap<WorkoutSession, WorkoutSessionResponseDto>();
+        CreateMap<ExerciseLog, ExerciseLogResponseDto>();
+
+        // AiChatMessage is mapped manually in AiChatService (needs JSON deserialization)
     }
 }

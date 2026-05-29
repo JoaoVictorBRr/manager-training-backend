@@ -1,6 +1,7 @@
 using FluentValidation;
 using FluentValidation.Results;
 using System.Linq.Expressions;
+using Zyntra.Domain.Dtos.PhysicalAssessmentDto;
 using Zyntra.Domain.Entities;
 using Zyntra.Domain.Interface.Repository;
 using Zyntra.Domain.Interface.Service;
@@ -41,6 +42,29 @@ public class PhysicalAssessmentService(IPhysicalAssessmentRepository repo, IVali
 
     public Task<IEnumerable<PhysicalAssessment>> GetHistoryByStudentAsync(long studentId)
         => _repo.GetHistoryByStudentAsync(studentId);
+
+    public async Task<IEnumerable<WeightHistoryDto>> GetWeightHistoryAsync(long studentId)
+    {
+        var history = await _repo.GetHistoryByStudentAsync(studentId);
+        return history
+            .OrderBy(a => a.AssessmentDate)
+            .Select(a => new WeightHistoryDto { Date = a.AssessmentDate, Weight = a.Weight });
+    }
+
+    public async Task<LatestAssessmentDto> GetLatestAsync(long studentId)
+    {
+        var history = await _repo.GetHistoryByStudentAsync(studentId);
+        var latest = history.OrderByDescending(a => a.AssessmentDate).FirstOrDefault();
+        if (latest == null) return new LatestAssessmentDto();
+        return new LatestAssessmentDto
+        {
+            AssessmentDate = latest.AssessmentDate,
+            Weight = latest.Weight,
+            Height = latest.Height,
+            Bmi = latest.Bmi,
+            BodyFatPercentage = latest.BodyFatPercentage,
+        };
+    }
 
     public async Task<List<ValidationFailure>> Validate(PhysicalAssessment entity)
     {

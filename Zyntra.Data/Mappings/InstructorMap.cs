@@ -13,7 +13,7 @@ public class InstructorMap : IEntityTypeConfiguration<Instructor>
         builder.HasKey(i => i.Id);
         builder.Property(i => i.Specialty).IsRequired().HasMaxLength(100);
         builder.Property(i => i.Cref).IsRequired().HasMaxLength(20);
-        builder.Property(i => i.Observation).HasMaxLength(2000);
+        builder.Property(i => i.Observation).IsRequired(false).HasMaxLength(2000);
 
         builder.HasIndex(i => i.Cref).IsUnique();
 

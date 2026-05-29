@@ -12,4 +12,7 @@ public interface IStudentService : IServiceBase<Student>
     Task<Student?> GetByUserIdAsync(long userId);
     Task<List<ValidationFailure>> Validate(Student entity);
     Task<Student> SaveOnboardingAsync(long userId, SaveOnboardingDto dto);
+    Task<StudentStatsDto> GetStatsAsync(Student student);
+    Task<IEnumerable<AchievementDto>> GetAchievementsAsync(long studentId);
+    Task<IEnumerable<WeeklyCheckInDto>> GetWeeklyCheckInHistoryAsync(long studentId, int weeksBack = 5);
 }

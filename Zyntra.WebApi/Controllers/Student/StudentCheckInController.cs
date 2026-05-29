@@ -14,8 +14,33 @@ namespace Zyntra.WebApi.Controllers.Student;
 [Authorize]
 public class StudentCheckInController(
     ICheckInService checkInService,
+    IStudentService studentService,
+    ICurrentUserService currentUserService,
     IMapper mapper) : ControllerBase
 {
+    [HttpGet("my-history")]
+    [SwaggerOperation(Summary = "Listar meu histórico de check-ins")]
+    [ProducesResponseType(typeof(IEnumerable<CheckInResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetMyHistory()
+    {
+        try
+        {
+            var userId = currentUserService.GetCurrentUserId();
+            var student = await studentService.GetByUserIdAsync(userId);
+            if (student == null)
+                return NotFound(new ErrorResponse { Type = "NotFound", Message = "Aluno não encontrado.", StatusCode = 404 });
+
+            var result = await checkInService.GetAllAsync(c => c.StudentId == student.Id);
+            return Ok(mapper.Map<IEnumerable<CheckInResponseDto>>(result));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new ErrorResponse { Type = "InternalServerError", Message = ex.Message, StatusCode = 500 });
+        }
+    }
+
     [HttpGet("history/{studentId}")]
     [SwaggerOperation(Summary = "Listar histórico de check-ins do aluno")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -45,6 +70,12 @@ public class StudentCheckInController(
     {
         try
         {
+            var userId = currentUserService.GetCurrentUserId();
+            var student = await studentService.GetByUserIdAsync(userId);
+            if (student == null)
+                return NotFound(new ErrorResponse { Type = "NotFound", Message = "Aluno não encontrado.", StatusCode = 404 });
+
+            dto.StudentId = student.Id;
             var result = await checkInService.CheckInAsync(dto);
             return Ok(mapper.Map<CheckInResponseDto>(result));
         }

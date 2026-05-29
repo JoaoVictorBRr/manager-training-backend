@@ -13,10 +13,10 @@ public class PaymentMap : IEntityTypeConfiguration<Payment>
         builder.HasKey(p => p.Id);
         builder.Property(p => p.Amount).IsRequired().HasPrecision(10, 2);
         builder.Property(p => p.DueDate).IsRequired();
-        builder.Property(p => p.PaymentDate);
+        builder.Property(p => p.PaymentDate).IsRequired(false);
         builder.Property(p => p.PaymentStatus).IsRequired();
-        builder.Property(p => p.PaymentMethod).HasMaxLength(50);
-        builder.Property(p => p.Observation).HasMaxLength(2000);
+        builder.Property(p => p.PaymentMethod).IsRequired(false).HasMaxLength(50);
+        builder.Property(p => p.Observation).IsRequired(false).HasMaxLength(2000);
 
         builder.HasOne(p => p.Student)
             .WithMany()

@@ -11,4 +11,5 @@ public class CheckInResponseDto
     public string Unit { get; set; }
     public CheckInType AccessType { get; set; }
     public CheckInStatus ValidationStatus { get; set; }
+    public string? WorkoutDayPerformed { get; set; }
 }

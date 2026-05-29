@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Zyntra.Domain.Enum;
 
 namespace Zyntra.Domain.Dtos.StudentDto;
@@ -13,4 +14,19 @@ public class StudentResponseDto
     public string PaymentStatus { get; set; }
     public DateTime? LastAccessDate { get; set; }
     public Situation Situation { get; set; }
+
+    [JsonPropertyName("membershipStatus")]
+    public string MembershipStatus { get; set; }
+
+    [JsonPropertyName("onboardingCompleted")]
+    public bool OnboardingCompleted { get; set; }
+
+    [JsonPropertyName("onboardingData")]
+    public SaveOnboardingDto? OnboardingData { get; set; }
+
+    [JsonPropertyName("avatarUrl")]
+    public string? AvatarUrl { get; set; }
+
+    [JsonPropertyName("subscriptionPlan")]
+    public int SubscriptionPlan { get; set; }
 }

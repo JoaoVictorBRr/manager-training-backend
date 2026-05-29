@@ -6,4 +6,5 @@ public class CheckInRequestDto
 {
     public long StudentId { get; set; }
     public CheckInType AccessType { get; set; }
+    public string? WorkoutDayPerformed { get; set; }
 }

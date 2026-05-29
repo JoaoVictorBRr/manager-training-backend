@@ -13,7 +13,7 @@ public class WaitListMap : IEntityTypeConfiguration<WaitList>
         builder.HasKey(w => w.Id);
         builder.Property(w => w.Position).IsRequired();
         builder.Property(w => w.InclusionDateTime).IsRequired();
-        builder.Property(w => w.Observation).HasMaxLength(2000);
+        builder.Property(w => w.Observation).IsRequired(false).HasMaxLength(2000);
 
         builder.HasOne(w => w.Student)
             .WithMany()

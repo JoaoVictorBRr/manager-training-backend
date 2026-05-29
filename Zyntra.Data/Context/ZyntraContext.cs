@@ -20,6 +20,16 @@ public class ZyntraContext(DbContextOptions<ZyntraContext> option) : DbContext(o
     public DbSet<Payment> Payment => Set<Payment>();
     public DbSet<ChatMessage> ChatMessage => Set<ChatMessage>();
     public DbSet<Notification> Notification => Set<Notification>();
+    public DbSet<StudentDiet> StudentDiet => Set<StudentDiet>();
+    public DbSet<DietMeal> DietMeal => Set<DietMeal>();
+    public DbSet<DietMealOption> DietMealOption => Set<DietMealOption>();
+    public DbSet<DietMealPhoto> DietMealPhoto => Set<DietMealPhoto>();
+    public DbSet<HydrationLog> HydrationLog => Set<HydrationLog>();
+    public DbSet<EvolutionPhoto> EvolutionPhoto => Set<EvolutionPhoto>();
+    public DbSet<StudentAchievement> StudentAchievement => Set<StudentAchievement>();
+    public DbSet<WorkoutSession> WorkoutSession => Set<WorkoutSession>();
+    public DbSet<ExerciseLog> ExerciseLog => Set<ExerciseLog>();
+    public DbSet<AiChatMessage> AiChatMessage => Set<AiChatMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

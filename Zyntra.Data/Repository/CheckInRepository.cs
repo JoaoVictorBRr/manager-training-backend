@@ -14,4 +14,12 @@ public class CheckInRepository(ZyntraContext zyntraContext) : BaseRepository<Che
         return await DbSet.AsNoTracking()
             .FirstOrDefaultAsync(c => c.StudentId == studentId && c.DateTime.Date == today);
     }
+
+    public async Task<IEnumerable<CheckIn>> GetByStudentAsync(long studentId)
+    {
+        return await DbSet.AsNoTracking()
+            .Where(c => c.StudentId == studentId)
+            .OrderByDescending(c => c.DateTime)
+            .ToListAsync();
+    }
 }

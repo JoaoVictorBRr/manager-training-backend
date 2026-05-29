@@ -13,7 +13,7 @@ public class ScheduleMap : IEntityTypeConfiguration<Schedule>
         builder.HasKey(s => s.Id);
         builder.Property(s => s.Status).IsRequired();
         builder.Property(s => s.ReservationDate).IsRequired();
-        builder.Property(s => s.Observation).HasMaxLength(2000);
+        builder.Property(s => s.Observation).IsRequired(false).HasMaxLength(2000);
 
         builder.HasOne(s => s.Student)
             .WithMany()

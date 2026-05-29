@@ -12,6 +12,7 @@ public class WorkoutSheetRepository(ZyntraContext zyntraContext) : BaseRepositor
     {
         return await DbSet.AsNoTracking()
             .Include(w => w.Exercises)
+            .Include(w => w.Student).ThenInclude(s => s.User)
             .Include(w => w.Instructor).ThenInclude(i => i.User)
             .FirstOrDefaultAsync(w => w.StudentId == studentId && w.IsActive);
     }

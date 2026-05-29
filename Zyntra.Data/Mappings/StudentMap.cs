@@ -12,8 +12,8 @@ public class StudentMap : IEntityTypeConfiguration<Student>
 
         builder.HasKey(s => s.Id);
         builder.Property(s => s.BirthDate).IsRequired();
-        builder.Property(s => s.PaymentStatus).HasMaxLength(30);
-        builder.Property(s => s.LastAccessDate);
+        builder.Property(s => s.PaymentStatus).IsRequired(false).HasMaxLength(30);
+        builder.Property(s => s.LastAccessDate).IsRequired(false);
         builder.Property(s => s.Observation).HasMaxLength(2000);
 
         builder.HasOne(s => s.User)

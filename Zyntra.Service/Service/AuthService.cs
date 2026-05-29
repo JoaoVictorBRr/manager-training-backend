@@ -66,7 +66,7 @@ public class AuthService(
             Name = dto.Name,
             Email = dto.Email,
             Cpf = dto.Cpf,
-            CellphoneNumber = dto.CellphoneNumber,
+            CellphoneNumber = dto.CellphoneNumber ?? string.Empty,
             Password = hash,
             Salt = salt,
             Role = Role.Student

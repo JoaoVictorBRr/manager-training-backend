@@ -50,9 +50,12 @@ public class CheckInService(
 
     public async Task<CheckIn> CheckInAsync(CheckInRequestDto request)
     {
-        var overduePayments = await _paymentRepository.GetOverdueByStudentAsync(request.StudentId);
-        if (overduePayments.Any())
-            throw new InvalidOperationException("Check-in bloqueado: aluno com pagamentos em atraso.");
+        if (request.AccessType != CheckInType.App)
+        {
+            var overduePayments = await _paymentRepository.GetOverdueByStudentAsync(request.StudentId);
+            if (overduePayments.Any())
+                throw new InvalidOperationException("Check-in bloqueado: aluno com pagamentos em atraso.");
+        }
 
         var checkIn = new CheckIn
         {
@@ -60,7 +63,8 @@ public class CheckInService(
             DateTime = DateTime.Now,
             Unit = "Principal",
             AccessType = request.AccessType,
-            ValidationStatus = CheckInStatus.Approved
+            ValidationStatus = CheckInStatus.Approved,
+            WorkoutDayPerformed = request.WorkoutDayPerformed
         };
 
         return await this.AddAsync(checkIn);

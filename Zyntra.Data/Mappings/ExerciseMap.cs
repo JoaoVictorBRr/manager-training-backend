@@ -16,9 +16,9 @@ public class ExerciseMap : IEntityTypeConfiguration<Exercise>
         builder.Property(e => e.Sets).IsRequired();
         builder.Property(e => e.Repetitions).IsRequired();
         builder.Property(e => e.SuggestedLoad).HasPrecision(10, 2);
-        builder.Property(e => e.VideoUrl).HasMaxLength(500);
-        builder.Property(e => e.Description).HasMaxLength(1000);
-        builder.Property(e => e.Observation).HasMaxLength(2000);
+        builder.Property(e => e.VideoUrl).IsRequired(false).HasMaxLength(500);
+        builder.Property(e => e.Description).IsRequired(false).HasMaxLength(1000);
+        builder.Property(e => e.Observation).IsRequired(false).HasMaxLength(2000);
 
         builder.HasOne(e => e.WorkoutSheet)
             .WithMany(w => w.Exercises)

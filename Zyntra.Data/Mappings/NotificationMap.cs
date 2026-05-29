@@ -16,7 +16,7 @@ public class NotificationMap : IEntityTypeConfiguration<Notification>
         builder.Property(n => n.Message).IsRequired().HasMaxLength(500);
         builder.Property(n => n.SendDateTime).IsRequired();
         builder.Property(n => n.IsRead).IsRequired().HasDefaultValue(false);
-        builder.Property(n => n.Observation).HasMaxLength(2000);
+        builder.Property(n => n.Observation).IsRequired(false).HasMaxLength(2000);
 
         builder.HasOne(n => n.User)
             .WithMany()

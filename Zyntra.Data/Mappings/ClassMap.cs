@@ -16,7 +16,7 @@ public class ClassMap : IEntityTypeConfiguration<Class>
         builder.Property(c => c.MaxCapacity).IsRequired();
         builder.Property(c => c.AvailableSlots).IsRequired();
         builder.Property(c => c.Unit).IsRequired().HasMaxLength(80);
-        builder.Property(c => c.Observation).HasMaxLength(2000);
+        builder.Property(c => c.Observation).IsRequired(false).HasMaxLength(2000);
 
         builder.HasOne(c => c.Instructor)
             .WithMany()

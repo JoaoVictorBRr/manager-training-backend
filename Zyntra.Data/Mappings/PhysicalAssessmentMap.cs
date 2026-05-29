@@ -16,9 +16,9 @@ public class PhysicalAssessmentMap : IEntityTypeConfiguration<PhysicalAssessment
         builder.Property(p => p.Height).IsRequired().HasPrecision(5, 2);
         builder.Property(p => p.Bmi).IsRequired().HasPrecision(5, 2);
         builder.Property(p => p.BodyFatPercentage).HasPrecision(5, 2);
-        builder.Property(p => p.Measurements).HasMaxLength(1000);
-        builder.Property(p => p.Notes).HasMaxLength(2000);
-        builder.Property(p => p.Observation).HasMaxLength(2000);
+        builder.Property(p => p.Measurements).IsRequired(false).HasMaxLength(1000);
+        builder.Property(p => p.Notes).IsRequired(false).HasMaxLength(2000);
+        builder.Property(p => p.Observation).IsRequired(false).HasMaxLength(2000);
 
         builder.HasOne(p => p.Student)
             .WithMany()
