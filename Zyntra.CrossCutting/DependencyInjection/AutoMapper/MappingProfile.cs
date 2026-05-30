@@ -1,13 +1,10 @@
 ﻿using AutoMapper;
 using Zyntra.Domain.Dtos.ChatDto;
-using Zyntra.Domain.Dtos.CheckInDto;
-using Zyntra.Domain.Dtos.ClassDto;
 using Zyntra.Domain.Dtos.ExerciseDto;
 using Zyntra.Domain.Dtos.InstructorDto;
 using Zyntra.Domain.Dtos.NotificationDto;
 using Zyntra.Domain.Dtos.PaymentDto;
 using Zyntra.Domain.Dtos.PhysicalAssessmentDto;
-using Zyntra.Domain.Dtos.ScheduleDto;
 using Zyntra.Domain.Dtos.StudentDto;
 using Zyntra.Domain.Dtos.WorkoutSessionDto;
 using Zyntra.Domain.Dtos.WorkoutSheetDto;
@@ -30,22 +27,6 @@ public class MappingProfile : Profile
         CreateMap<Instructor, InstructorResponseDto>()
             .ForMember(d => d.Name, o => o.MapFrom(s => s.User.Name))
             .ForMember(d => d.Email, o => o.MapFrom(s => s.User.Email));
-
-        CreateMap<ClassCreateDto, Class>();
-        CreateMap<ClassUpdateDto, Class>();
-        CreateMap<Class, ClassResponseDto>()
-            .ForMember(d => d.InstructorName, o => o.MapFrom(s => s.Instructor.User.Name));
-
-        CreateMap<Schedule, ScheduleResponseDto>()
-            .ForMember(d => d.StudentName, o => o.MapFrom(s => s.Student.User.Name))
-            .ForMember(d => d.ClassModality, o => o.MapFrom(s => s.Class.Modality))
-            .ForMember(d => d.ClassDateTime, o => o.MapFrom(s => s.Class.DateTime))
-            .ForMember(d => d.ClassUnit, o => o.MapFrom(s => s.Class.Unit))
-            .ForMember(d => d.InstructorName, o => o.MapFrom(s => s.Class.Instructor.User.Name))
-            .ForMember(d => d.ReservationDate, o => o.MapFrom(s => s.DateCreated));
-
-        CreateMap<CheckIn, CheckInResponseDto>()
-            .ForMember(d => d.StudentName, o => o.MapFrom(s => s.Student.User.Name));
 
         CreateMap<WorkoutSheet, WorkoutSheetResponseDto>()
             .ForMember(d => d.StudentName, o => o.MapFrom(s => s.Student.User.Name))

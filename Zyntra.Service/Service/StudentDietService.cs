@@ -73,6 +73,120 @@ public class StudentDietService(
         return MapToDto(created!);
     }
 
+    public Task<StudentDietResponseDto> GenerateDefaultDietAsync(long studentId, string? objective, List<string>? dietRestrictions)
+    {
+        var isVeg = dietRestrictions?.Any(r =>
+            r.Contains("vegetarian", StringComparison.OrdinalIgnoreCase) ||
+            r.Contains("vegano", StringComparison.OrdinalIgnoreCase) ||
+            r.Contains("vegan", StringComparison.OrdinalIgnoreCase)) ?? false;
+
+        var dto = objective switch
+        {
+            "lose_weight" => BuildLoseWeightDiet(isVeg),
+            "gain_muscle" => BuildGainMuscleDiet(isVeg),
+            _             => BuildBalancedDiet(isVeg),
+        };
+
+        return CreateDietAsync(studentId, dto);
+    }
+
+    private static CreateDietDto BuildLoseWeightDiet(bool veg) => new()
+    {
+        Name = "Plano para Emagrecimento",
+        Meals =
+        [
+            new() { MealType = MealType.Breakfast, Options =
+            [
+                new() { FoodName = "Ovos mexidos", Quantity = "2 unidades", Calories = 140, Protein = 12, Carbs = 2, Fat = 9 },
+                new() { FoodName = "Pão integral", Quantity = "1 fatia", Calories = 70, Protein = 3, Carbs = 13, Fat = 1 },
+            ]},
+            new() { MealType = MealType.Lunch, Options =
+            [
+                new() { FoodName = veg ? "Tofu grelhado" : "Frango grelhado", Quantity = "150g", Calories = 160, Protein = veg ? 16 : 32, Carbs = veg ? 4 : 0, Fat = 5 },
+                new() { FoodName = "Arroz integral", Quantity = "4 colheres de sopa", Calories = 140, Protein = 3, Carbs = 30, Fat = 1 },
+                new() { FoodName = "Salada verde", Quantity = "à vontade", Calories = 30, Protein = 2, Carbs = 5, Fat = 0 },
+            ]},
+            new() { MealType = MealType.AfternoonSnack, Options =
+            [
+                new() { FoodName = "Iogurte grego natural", Quantity = "170g", Calories = 100, Protein = 17, Carbs = 6, Fat = 0 },
+                new() { FoodName = "Maçã", Quantity = "1 unidade", Calories = 80, Protein = 0, Carbs = 21, Fat = 0 },
+            ]},
+            new() { MealType = MealType.Dinner, Options =
+            [
+                new() { FoodName = veg ? "Lentilha cozida" : "Peixe grelhado", Quantity = "150g", Calories = 160, Protein = veg ? 13 : 30, Carbs = veg ? 28 : 0, Fat = 2 },
+                new() { FoodName = "Batata doce", Quantity = "100g", Calories = 90, Protein = 2, Carbs = 21, Fat = 0 },
+                new() { FoodName = "Brócolis cozido", Quantity = "100g", Calories = 35, Protein = 3, Carbs = 7, Fat = 0 },
+            ]},
+        ],
+    };
+
+    private static CreateDietDto BuildGainMuscleDiet(bool veg) => new()
+    {
+        Name = "Plano para Ganho de Massa",
+        Meals =
+        [
+            new() { MealType = MealType.Breakfast, Options =
+            [
+                new() { FoodName = "Ovos mexidos", Quantity = "3 unidades", Calories = 210, Protein = 18, Carbs = 3, Fat = 14 },
+                new() { FoodName = "Pão integral", Quantity = "2 fatias", Calories = 140, Protein = 6, Carbs = 26, Fat = 2 },
+                new() { FoodName = "Banana", Quantity = "1 unidade", Calories = 90, Protein = 1, Carbs = 23, Fat = 0 },
+            ]},
+            new() { MealType = MealType.Lunch, Options =
+            [
+                new() { FoodName = veg ? "Grão-de-bico cozido" : "Frango grelhado", Quantity = "200g", Calories = veg ? 240 : 220, Protein = veg ? 14 : 42, Carbs = veg ? 40 : 0, Fat = veg ? 4 : 5 },
+                new() { FoodName = "Arroz integral", Quantity = "6 colheres de sopa", Calories = 210, Protein = 4, Carbs = 45, Fat = 1 },
+                new() { FoodName = "Feijão cozido", Quantity = "1 concha", Calories = 140, Protein = 9, Carbs = 25, Fat = 1 },
+            ]},
+            new() { MealType = MealType.AfternoonSnack, Options =
+            [
+                new() { FoodName = "Batata doce", Quantity = "150g", Calories = 135, Protein = 3, Carbs = 31, Fat = 0 },
+                new() { FoodName = veg ? "Iogurte grego" : "Frango grelhado", Quantity = veg ? "200g" : "100g", Calories = veg ? 120 : 110, Protein = veg ? 20 : 21, Carbs = veg ? 7 : 0, Fat = veg ? 0 : 2 },
+            ]},
+            new() { MealType = MealType.Dinner, Options =
+            [
+                new() { FoodName = veg ? "Tofu grelhado" : "Carne vermelha magra", Quantity = "200g", Calories = veg ? 160 : 260, Protein = veg ? 21 : 42, Carbs = veg ? 4 : 0, Fat = veg ? 8 : 10 },
+                new() { FoodName = "Arroz integral", Quantity = "4 colheres de sopa", Calories = 140, Protein = 3, Carbs = 30, Fat = 1 },
+                new() { FoodName = "Legumes salteados", Quantity = "100g", Calories = 60, Protein = 2, Carbs = 12, Fat = 1 },
+            ]},
+            new() { MealType = MealType.Supper, Options =
+            [
+                new() { FoodName = "Queijo cottage", Quantity = "200g", Calories = 140, Protein = 24, Carbs = 8, Fat = 2 },
+                new() { FoodName = "Castanhas", Quantity = "20g", Calories = 130, Protein = 3, Carbs = 3, Fat = 12 },
+            ]},
+        ],
+    };
+
+    private static CreateDietDto BuildBalancedDiet(bool veg) => new()
+    {
+        Name = "Plano Alimentar Equilibrado",
+        Meals =
+        [
+            new() { MealType = MealType.Breakfast, Options =
+            [
+                new() { FoodName = "Ovos mexidos", Quantity = "2 unidades", Calories = 140, Protein = 12, Carbs = 2, Fat = 9 },
+                new() { FoodName = "Pão integral", Quantity = "2 fatias", Calories = 140, Protein = 6, Carbs = 26, Fat = 2 },
+                new() { FoodName = "Fruta da estação", Quantity = "1 unidade média", Calories = 70, Protein = 1, Carbs = 18, Fat = 0 },
+            ]},
+            new() { MealType = MealType.Lunch, Options =
+            [
+                new() { FoodName = veg ? "Feijão cozido" : "Frango grelhado", Quantity = veg ? "2 conchas" : "180g", Calories = veg ? 280 : 200, Protein = veg ? 18 : 38, Carbs = veg ? 50 : 0, Fat = veg ? 2 : 4 },
+                new() { FoodName = "Arroz integral", Quantity = "5 colheres de sopa", Calories = 175, Protein = 4, Carbs = 37, Fat = 1 },
+                new() { FoodName = "Salada variada", Quantity = "à vontade", Calories = 40, Protein = 2, Carbs = 8, Fat = 0 },
+            ]},
+            new() { MealType = MealType.AfternoonSnack, Options =
+            [
+                new() { FoodName = "Iogurte grego natural", Quantity = "170g", Calories = 100, Protein = 17, Carbs = 6, Fat = 0 },
+                new() { FoodName = "Castanhas", Quantity = "30g", Calories = 195, Protein = 4, Carbs = 4, Fat = 19 },
+            ]},
+            new() { MealType = MealType.Dinner, Options =
+            [
+                new() { FoodName = veg ? "Omelete de legumes" : "Omelete", Quantity = "3 ovos", Calories = 210, Protein = 18, Carbs = veg ? 8 : 3, Fat = 14 },
+                new() { FoodName = "Batata doce", Quantity = "100g", Calories = 90, Protein = 2, Carbs = 21, Fat = 0 },
+                new() { FoodName = "Legumes no vapor", Quantity = "100g", Calories = 50, Protein = 3, Carbs = 10, Fat = 0 },
+            ]},
+        ],
+    };
+
     public async Task CompleteMealAsync(long dietMealId)
     {
         var meal = await mealRepo.GetByIdAsync(dietMealId);

@@ -1,11 +1,9 @@
 using Zyntra.Domain.Dtos.CheckInDto;
-using Zyntra.Domain.Entities;
-using Zyntra.Domain.Interface.Service.Base;
 
 namespace Zyntra.Domain.Interface.Service;
 
-public interface ICheckInService : IServiceBase<CheckIn>
+public interface ICheckInService
 {
-    Task<CheckIn> CheckInAsync(CheckInRequestDto request);
-    Task<CheckIn> CheckInPartnerAsync(CheckInPartnerRequestDto request);
+    Task<CheckInHistoryDto> CheckInAsync(long studentId, string workoutDay);
+    Task<IEnumerable<CheckInHistoryDto>> GetHistoryAsync(long studentId);
 }

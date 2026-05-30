@@ -1,8 +1,5 @@
-using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using System.Text.RegularExpressions;
-using Microsoft.Extensions.Configuration;
 using Zyntra.Domain.Dtos.AiChatDto;
 using Zyntra.Domain.Dtos.DietDto;
 using Zyntra.Domain.Dtos.StudentDto;
@@ -19,9 +16,7 @@ public class AiChatService(
     IWorkoutSheetService workoutSheetService,
     IStudentDietService dietService,
     IWorkoutTemplateService workoutTemplateService,
-    IExerciseService exerciseService,
-    HttpClient httpClient,
-    IConfiguration configuration) : IAiChatService
+    IExerciseService exerciseService) : IAiChatService
 {
     private static readonly JsonSerializerOptions _jsonOpts = new() { PropertyNameCaseInsensitive = true };
 
@@ -42,7 +37,6 @@ public class AiChatService(
 
         var diet = await dietService.GetActiveDietAsync(studentId);
 
-        // Save user message
         var userMsg = new AiChatMessage
         {
             StudentId = studentId,
@@ -51,14 +45,9 @@ public class AiChatService(
         };
         await repo.AddAsync(userMsg);
 
-        // Fetch recent history for context (excluding the message just saved)
-        var history = (await repo.GetHistoryAsync(studentId, 40)).ToList();
+        var history = (await repo.GetHistoryAsync(studentId, 20)).ToList();
 
-        var systemPrompt = BuildSystemPrompt(student, onboarding, workout, diet);
-        var messages = BuildMessages(systemPrompt, history, userMessage);
-
-        var aiRaw = await CallOpenAiAsync(messages);
-        var (cleanContent, actionJson) = ParseResponse(aiRaw);
+        var (cleanContent, actionJson) = BuildRuleBasedResponse(userMessage, student, onboarding, workout, diet, history);
 
         var aiMsg = new AiChatMessage
         {
@@ -111,144 +100,451 @@ public class AiChatService(
         await repo.UpdateAsync(msg);
     }
 
-    // ─── System prompt ───────────────────────────────────────────────────────
+    // ─── Rule-based response engine ──────────────────────────────────────────
 
-    private static string BuildSystemPrompt(
+    private static (string, string?) BuildRuleBasedResponse(
+        string userMessage,
         Student student,
         SaveOnboardingDto? o,
         WorkoutSheet? workout,
-        StudentDietResponseDto? diet)
+        StudentDietResponseDto? diet,
+        List<AiChatMessage> history)
     {
-        var sb = new StringBuilder();
-        sb.AppendLine("Você é Zyntra, assistente pessoal de fitness integrado ao aplicativo de academia.");
-        sb.AppendLine();
+        var msg = userMessage.ToLower().Trim();
+        var firstName = GetFirstName(student.User?.Name);
+        var lastBot = (history.LastOrDefault(h => h.Role == "assistant")?.Content ?? "").ToLower();
 
-        sb.AppendLine("PERFIL DO ALUNO:");
-        sb.AppendLine($"- Nome: {student.User?.Name ?? "Aluno"}");
-        sb.AppendLine($"- Objetivo: {TranslateObjective(o?.Objective)}");
-        sb.AppendLine($"- Idade: {o?.Age ?? 0} anos, Peso: {o?.Weight ?? 0}kg, Altura: {o?.Height ?? 0}cm");
-        sb.AppendLine($"- Dias de treino: {o?.TrainingDays ?? 4}x/semana | Duração: {o?.TrainingDuration ?? "1hour"}");
-        sb.AppendLine($"- Horário preferido: {TranslateTime(o?.PreferredTime)} | Ambiente: {TranslateEnvironment(o?.Environment)}");
-        sb.AppendLine($"- Restrições alimentares: {(o?.DietRestrictions?.Count > 0 ? string.Join(", ", o.DietRestrictions) : "nenhuma")}");
-        sb.AppendLine($"- Lesões/limitações: {(o?.Injuries?.Count > 0 ? string.Join(", ", o.Injuries) : "nenhuma")}");
-        sb.AppendLine();
+        // Saudações
+        if (HasAny(msg, "ola", "olá", "oi ", "oi,", "^oi$", "ei ", "hey", "hello", "hi ", "bom dia", "boa tarde", "boa noite", "boas", "salve", "eai", "e aí", "e ai")
+            || msg == "oi")
+            return (BuildGreeting(firstName), null);
 
-        if (workout != null)
+        // Seleção numerada — detecta contexto pelo último bot
+        if (msg is "1" or "2" or "3" or "4")
         {
-            sb.AppendLine($"TREINO ATUAL (SheetId: {workout.Id}):");
-            var exercisesByDay = (workout.Exercises ?? [])
-                .GroupBy(e => e.WorkoutDay)
-                .OrderBy(g => g.Key);
+            // Menu principal
+            if (HasAll(lastBot, "meu treino", "minha dieta"))
+                return msg switch
+                {
+                    "1" => BuildTrainingMenu(firstName, workout, o),
+                    "2" => BuildDietMenu(firstName, diet),
+                    "3" => (BuildHealthTips(firstName, o), null),
+                    "4" => (BuildMotivation(firstName, o), null),
+                    _ => (BuildDefault(firstName), null),
+                };
 
-            foreach (var day in exercisesByDay)
-            {
-                var exerciseList = string.Join(" | ", day.Select(e => $"[ID:{e.Id}] {e.Name} ({e.MuscleGroup}) - {e.Sets}x{e.Repetitions}"));
-                sb.AppendLine($"Dia {day.Key}: {exerciseList}");
-            }
+            // Submenu treino
+            if (HasAny(lastBot, "regenerar meu treino", "substituir um exercício", "dicas de treino"))
+                return msg switch
+                {
+                    "1" => BuildRegenerateWorkout(o),
+                    "2" => (BuildReplaceExerciseInfo(firstName, workout), null),
+                    "3" => (BuildTrainingTips(firstName, o), null),
+                    _ => (BuildDefault(firstName), null),
+                };
+
+            // Submenu dieta
+            if (HasAny(lastBot, "criar novo plano alimentar", "criar plano alimentar", "dicas de alimentação"))
+                return msg switch
+                {
+                    "1" => BuildCreateDiet(firstName, o),
+                    "2" => (BuildDietTips(firstName, o), null),
+                    "3" => (BuildExplainDiet(firstName, diet), null),
+                    _ => (BuildDefault(firstName), null),
+                };
+
+            // Submenu sem treino
+            if (HasAny(lastBot, "gerar meu treino") && HasAny(lastBot, "dicas de treino"))
+                return msg switch
+                {
+                    "1" => BuildRegenerateWorkout(o),
+                    "2" => (BuildTrainingTips(firstName, o), null),
+                    _ => (BuildDefault(firstName), null),
+                };
+
+            // Submenu sem dieta
+            if (HasAny(lastBot, "criar plano alimentar") && HasAny(lastBot, "dicas de alimentação"))
+                return msg switch
+                {
+                    "1" => BuildCreateDiet(firstName, o),
+                    "2" => (BuildDietTips(firstName, o), null),
+                    _ => (BuildDefault(firstName), null),
+                };
         }
-        else
-        {
-            sb.AppendLine("TREINO ATUAL: nenhum treino ativo.");
-        }
 
-        sb.AppendLine();
+        // Regenerar treino
+        if (HasAny(msg, "regenerar treino", "gerar novo treino", "novo treino", "recriar treino",
+                        "criar treino", "montar treino", "quero mudar meu treino", "gera um treino", "cria um treino"))
+            return BuildRegenerateWorkout(o);
 
-        if (diet != null && diet.Meals.Count > 0)
-        {
-            sb.AppendLine($"DIETA ATUAL (Total: {diet.TotalCalories}kcal/dia):");
-            foreach (var meal in diet.Meals)
-            {
-                var opts = meal.Options.Count > 0
-                    ? string.Join("; ", meal.Options.Select(op => $"{op.FoodName} {op.Quantity} ({op.Calories}kcal, {op.Protein}g prot)"))
-                    : "sem opções";
-                sb.AppendLine($"{meal.MealTypeName}: {opts}");
-            }
-        }
-        else
-        {
-            sb.AppendLine("DIETA ATUAL: nenhuma dieta ativa.");
-        }
+        // Substituir exercício
+        if (HasAny(msg, "substituir exercício", "substituir exercicio", "trocar exercício", "trocar exercicio",
+                        "mudar exercício", "mudar exercicio", "quero substituir"))
+            return (BuildReplaceExerciseInfo(firstName, workout), null);
 
-        sb.AppendLine();
-        sb.AppendLine("INSTRUÇÕES:");
-        sb.AppendLine("- Responda SEMPRE em português do Brasil");
-        sb.AppendLine("- Seja motivador, específico e acolhedor");
-        sb.AppendLine("- Respeite sempre o objetivo, limitações e preferências do aluno");
-        sb.AppendLine("- Só proponha ações se o aluno pedir explicitamente uma mudança");
-        sb.AppendLine("- Para propor uma ação, finalize sua resposta com exatamente: [ACTION]{json}[/ACTION]");
-        sb.AppendLine("- Tipos de ação e seus params:");
-        sb.AppendLine("  REGENERATE_WORKOUT: {\"type\":\"REGENERATE_WORKOUT\",\"label\":\"Regenerar treino\",\"params\":{\"trainingDays\":N}}");
-        sb.AppendLine("  REPLACE_EXERCISE: {\"type\":\"REPLACE_EXERCISE\",\"label\":\"Substituir X por Y\",\"params\":{\"deleteExerciseId\":N,\"newExercise\":{\"workoutSheetId\":N,\"name\":\"...\",\"muscleGroup\":\"...\",\"sets\":N,\"repetitions\":\"12\",\"workoutDay\":\"A\",\"exerciseType\":1}}}");
-        sb.AppendLine("  CREATE_DIET: {\"type\":\"CREATE_DIET\",\"label\":\"Criar novo plano alimentar\",\"params\":{\"name\":\"Plano ...\",\"meals\":[{\"mealType\":1,\"options\":[{\"foodName\":\"...\",\"quantity\":\"...\",\"calories\":N,\"protein\":N,\"carbs\":N,\"fat\":N}]}]}}");
-        sb.AppendLine("  (mealType: 1=Café da Manhã, 2=Almoço, 3=Café da Tarde, 4=Janta, 5=Ceia)");
-        sb.AppendLine("  (exerciseType: 1=musculação, 2=cardio, 3=peso corporal)");
-        sb.AppendLine("- Só inclua [ACTION] quando houver uma proposta concreta de mudança");
+        // Criar dieta
+        if (HasAny(msg, "criar dieta", "nova dieta", "novo plano alimentar", "quero mudar minha dieta",
+                        "criar plano", "monte uma dieta", "montar dieta", "gera uma dieta", "cria uma dieta"))
+            return BuildCreateDiet(firstName, o);
 
-        return sb.ToString();
+        // Treino
+        if (HasAny(msg, "treino", "exercício", "exercicio", "musculação", "musculacao", "academia",
+                        "série", "serie", "repetição", "repeticao", "músculo", "musculo", "treinar",
+                        "hipertrofia", "força", "forca", "peito", "costas", "perna", "bíceps", "biceps",
+                        "tríceps", "triceps", "ombro", "abdômen", "abdomen", "glúteo", "gluteo", "panturrilha"))
+            return BuildTrainingMenu(firstName, workout, o);
+
+        // Dieta
+        if (HasAny(msg, "dieta", "alimentação", "alimentacao", "comer", "comida", "refeição", "refeicao",
+                        "nutrição", "nutricao", "caloria", "proteína", "proteina", "carboidrato", "gordura",
+                        "emagrecer", "engordar", "nutriente", "macro", "almoço", "almoco", "janta",
+                        "café da manhã", "lanche", "ceia"))
+            return BuildDietMenu(firstName, diet);
+
+        // Saúde e bem-estar
+        if (HasAny(msg, "saúde", "saude", "bem-estar", "bem estar", "dormir", "sono", "hidratação",
+                        "hidratacao", "água", "agua", "suplemento", "descanso", "recuperação", "recuperacao",
+                        "lesão", "lesao", "dor", "alongamento", "aquecimento"))
+            return (BuildHealthTips(firstName, o), null);
+
+        // Motivação e resultados
+        if (HasAny(msg, "motivação", "motivacao", "motivado", "progresso", "resultado", "evolução",
+                        "evolucao", "conseguir", "difícil", "dificil", "cansado", "desanimado",
+                        "ânimo", "animo", "persistir", "desistir", "não consigo", "nao consigo"))
+            return (BuildMotivation(firstName, o), null);
+
+        return (BuildDefault(firstName), null);
     }
 
-    // ─── OpenAI call ─────────────────────────────────────────────────────────
+    // ─── Response builders ────────────────────────────────────────────────────
 
-    private async Task<string> CallOpenAiAsync(List<object> messages)
+    private static string BuildGreeting(string firstName) =>
+        $"Olá, {firstName}! Fico feliz em te ver por aqui 😊\n\n" +
+        "O que você deseja fazer hoje?\n\n" +
+        "1️⃣ Meu treino\n" +
+        "2️⃣ Minha dieta\n" +
+        "3️⃣ Dicas de saúde e bem-estar\n" +
+        "4️⃣ Motivação e resultados";
+
+    private static (string, string?) BuildTrainingMenu(string firstName, WorkoutSheet? workout, SaveOnboardingDto? o)
     {
-        var apiKey = configuration["OpenAI:ApiKey"]
-            ?? throw new InvalidOperationException("OpenAI API key não configurada.");
-        var model = configuration["OpenAI:Model"] ?? "gpt-4o-mini";
+        if (workout == null)
+            return (
+                $"Você ainda não tem um treino ativo, {firstName}! Vamos criar um?\n\n" +
+                "1️⃣ Gerar meu treino\n" +
+                "2️⃣ Dicas de treino",
+                null
+            );
 
-        var body = JsonSerializer.Serialize(new
-        {
-            model,
-            messages,
-            max_tokens = 1200,
-            temperature = 0.7,
-        });
+        var exerciseCount = workout.Exercises?.Count ?? 0;
+        var days = workout.Exercises?.Select(e => e.WorkoutDay).Distinct().Count() ?? 0;
+        var trainingDays = o?.TrainingDays ?? days;
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.openai.com/v1/chat/completions");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
-        request.Content = new StringContent(body, Encoding.UTF8, "application/json");
-
-        var response = await httpClient.SendAsync(request);
-        var responseBody = await response.Content.ReadAsStringAsync();
-
-        if (!response.IsSuccessStatusCode)
-            throw new InvalidOperationException($"OpenAI API error: {response.StatusCode} — {responseBody}");
-
-        using var doc = JsonDocument.Parse(responseBody);
-        return doc.RootElement
-            .GetProperty("choices")[0]
-            .GetProperty("message")
-            .GetProperty("content")
-            .GetString() ?? string.Empty;
+        return (
+            $"Seu treino está ativo, {firstName}! Você treina **{trainingDays}x por semana** com " +
+            $"**{exerciseCount} exercícios** em **{days} dias** diferentes.\n\n" +
+            "O que você quer fazer?\n\n" +
+            "1️⃣ Regenerar meu treino completo\n" +
+            "2️⃣ Substituir um exercício\n" +
+            "3️⃣ Dicas de treino",
+            null
+        );
     }
 
-    private static List<object> BuildMessages(string systemPrompt, List<AiChatMessage> history, string newUserMessage)
+    private static (string, string?) BuildDietMenu(string firstName, StudentDietResponseDto? diet)
     {
-        var messages = new List<object>
+        if (diet == null || diet.Meals.Count == 0)
+            return (
+                $"Você ainda não tem uma dieta ativa, {firstName}! Que tal montar um plano alimentar personalizado?\n\n" +
+                "1️⃣ Criar plano alimentar\n" +
+                "2️⃣ Dicas de alimentação",
+                null
+            );
+
+        return (
+            $"Sua dieta atual tem **{diet.TotalCalories}kcal por dia**, {firstName}, " +
+            $"distribuídas em **{diet.Meals.Count} refeições**.\n\n" +
+            "O que você quer fazer?\n\n" +
+            "1️⃣ Criar novo plano alimentar\n" +
+            "2️⃣ Dicas de alimentação\n" +
+            "3️⃣ Entender minha dieta atual",
+            null
+        );
+    }
+
+    private static string BuildHealthTips(string firstName, SaveOnboardingDto? o)
+    {
+        var injuryNote = o?.Injuries?.Count > 0
+            ? $"\n\nComo você tem restrições ({string.Join(", ", o.Injuries)}), respeite sempre os limites do seu corpo."
+            : string.Empty;
+
+        return
+            $"Dicas importantes de saúde para você, {firstName}! 💪\n\n" +
+            "**Hidratação:** Beba pelo menos 35ml de água por kg de peso por dia.\n\n" +
+            "**Sono:** Durma de 7 a 9 horas — é nesse período que os músculos se recuperam e crescem.\n\n" +
+            "**Descanso:** Respeite os dias de descanso para evitar overtraining e lesões.\n\n" +
+            "**Consistência:** Prefira frequência à intensidade extrema — resultados vêm com regularidade.\n\n" +
+            "**Aquecimento:** Sempre faça 5-10 minutos de aquecimento antes do treino para proteger as articulações." +
+            injuryNote;
+    }
+
+    private static string BuildMotivation(string firstName, SaveOnboardingDto? o)
+    {
+        var objective = o?.Objective switch
         {
-            new { role = "system", content = systemPrompt }
+            "lose_weight"    => "emagrecer",
+            "gain_muscle"    => "ganhar massa muscular",
+            "get_toned"      => "definir o corpo",
+            "health"         => "melhorar sua saúde",
+            "conditioning"   => "melhorar seu condicionamento físico",
+            _                => "alcançar seus objetivos",
         };
 
-        // Add history (skip the last entry which is the user message we just saved)
-        foreach (var msg in history.SkipLast(1))
-        {
-            messages.Add(new { role = msg.Role, content = msg.Content });
-        }
-
-        messages.Add(new { role = "user", content = newUserMessage });
-        return messages;
+        return
+            $"Você está no caminho certo, {firstName}! 🌟\n\n" +
+            $"Seu objetivo de **{objective}** é totalmente alcançável com consistência e dedicação.\n\n" +
+            "**Lembre-se:** Todo progresso conta, mesmo que pequeno. Cada treino completado é uma vitória.\n\n" +
+            "**Dica mental:** Não compare seu progresso com o de outros — compare com quem você era ontem.\n\n" +
+            "**Foco:** Os resultados aparecem para quem persiste, não para quem treina perfeito. Continue! 💪";
     }
 
-    // ─── Response parsing ────────────────────────────────────────────────────
+    private static string BuildTrainingTips(string firstName, SaveOnboardingDto? o) =>
+        o?.Objective switch
+        {
+            "lose_weight" =>
+                $"Dicas de treino para emagrecer, {firstName}! 🏃\n\n" +
+                "• Priorize exercícios compostos (agachamento, supino, levantamento terra)\n" +
+                "• Inclua cardio moderado após o treino de força\n" +
+                "• Mantenha intervalos curtos (30-60s) para maior queima calórica\n" +
+                "• Progrida a carga gradualmente para evitar adaptação",
+            "gain_muscle" =>
+                $"Dicas de treino para hipertrofia, {firstName}! 💪\n\n" +
+                "• Foco em sobrecarga progressiva — aumente o peso gradualmente\n" +
+                "• Treine cada grupo muscular 2x por semana para maior estímulo\n" +
+                "• Séries de 8-12 repetições são ideais para hipertrofia\n" +
+                "• Descanse 60-90 segundos entre as séries para recuperação adequada",
+            _ =>
+                $"Dicas gerais de treino, {firstName}! 🏋️\n\n" +
+                "• Priorize a forma correta sobre a carga — evita lesões e melhora resultados\n" +
+                "• Varie os exercícios a cada 4-6 semanas para evitar platôs\n" +
+                "• Mantenha um diário de treino para acompanhar sua evolução\n" +
+                "• Hidrate-se durante o treino — afeta diretamente a performance",
+        };
 
-    private static (string content, string? actionJson) ParseResponse(string raw)
+    private static string BuildReplaceExerciseInfo(string firstName, WorkoutSheet? workout)
     {
-        var match = Regex.Match(raw, @"\[ACTION\](.*?)\[/ACTION\]", RegexOptions.Singleline);
-        if (!match.Success)
-            return (raw.Trim(), null);
+        if (workout?.Exercises == null || workout.Exercises.Count == 0)
+            return $"{firstName}, você ainda não tem exercícios no treino para substituir. Quer gerar um treino primeiro?";
 
-        var actionJson = match.Groups[1].Value.Trim();
-        var cleanContent = raw.Replace(match.Value, string.Empty).Trim();
-        return (cleanContent, actionJson);
+        var list = workout.Exercises
+            .Take(10)
+            .Select(e => $"• **{e.Name}** ({e.MuscleGroup}) — Dia {e.WorkoutDay}, {e.Sets}x{e.Repetitions}");
+
+        var extra = workout.Exercises.Count > 10
+            ? $"\n... e mais {workout.Exercises.Count - 10} exercícios."
+            : string.Empty;
+
+        return
+            $"Para substituir um exercício, {firstName}, me informe qual você quer trocar e por qual gostaria de substituir!\n\n" +
+            "**Seus exercícios atuais:**\n" +
+            string.Join("\n", list) +
+            extra +
+            "\n\nEx: *\"Quero substituir Supino Reto por Crucifixo\"*";
+    }
+
+    private static (string, string?) BuildRegenerateWorkout(SaveOnboardingDto? o)
+    {
+        var days = o?.TrainingDays ?? 4;
+        var json = $"{{\"type\":\"REGENERATE_WORKOUT\",\"label\":\"Regenerar treino completo\",\"params\":{{\"trainingDays\":{days}}}}}";
+
+        return (
+            $"Vou regenerar seu treino completo com base no seu perfil! O novo plano será montado para " +
+            $"**{days} dias por semana**.\n\nConfirme abaixo para aplicar:",
+            json
+        );
+    }
+
+    private static (string, string?) BuildCreateDiet(string firstName, SaveOnboardingDto? o)
+    {
+        var isVeg = o?.DietRestrictions?.Any(r =>
+            r.Contains("vegetarian", StringComparison.OrdinalIgnoreCase) ||
+            r.Contains("vegano", StringComparison.OrdinalIgnoreCase)) ?? false;
+
+        var (name, mealsJson, totalCal) = (o?.Objective ?? "health") switch
+        {
+            "lose_weight" => LoseWeightDietJson(isVeg),
+            "gain_muscle" => GainMuscleDietJson(isVeg),
+            _             => BalancedDietJson(isVeg),
+        };
+
+        var actionJson = $"{{\"type\":\"CREATE_DIET\",\"label\":\"Criar plano alimentar\",\"params\":{{\"name\":\"{name}\",\"meals\":{mealsJson}}}}}";
+
+        return (
+            $"Criei um plano alimentar personalizado para você, {firstName}! 🥗\n\n" +
+            $"**{name}** — aproximadamente **{totalCal}kcal/dia**\n\n" +
+            "Baseado no seu objetivo e perfil. Confirme para aplicar:",
+            actionJson
+        );
+    }
+
+    private static string BuildDietTips(string firstName, SaveOnboardingDto? o) =>
+        o?.Objective switch
+        {
+            "lose_weight" =>
+                $"Dicas de alimentação para emagrecer, {firstName}! 🥗\n\n" +
+                "• Crie um déficit calórico moderado de 300-500kcal abaixo do seu gasto total\n" +
+                "• Priorize proteínas para preservar a massa muscular (1,6-2g por kg de peso)\n" +
+                "• Prefira alimentos integrais e ricos em fibras — aumentam a saciedade\n" +
+                "• Evite ultraprocessados e bebidas açucaradas\n" +
+                "• Coma a cada 3-4 horas para evitar picos de fome",
+            "gain_muscle" =>
+                $"Dicas de alimentação para ganhar massa, {firstName}! 💪\n\n" +
+                "• Consuma um superávit calórico moderado de 200-400kcal acima do gasto\n" +
+                "• Ingira de 1,8 a 2,5g de proteína por kg de peso corporal\n" +
+                "• Não negligencie os carboidratos — são o combustível do treino\n" +
+                "• Distribua as refeições ao longo do dia para síntese proteica constante\n" +
+                "• Coma algo proteico até 30 minutos após o treino",
+            _ =>
+                $"Dicas de alimentação para você, {firstName}! 🥗\n\n" +
+                "• Priorize alimentos naturais e minimamente processados\n" +
+                "• Inclua proteína em todas as refeições principais\n" +
+                "• Não pule refeições — pode levar a excessos depois\n" +
+                "• Beba água antes das refeições para controlar o apetite\n" +
+                "• Planeje suas refeições com antecedência para evitar escolhas ruins",
+        };
+
+    private static string BuildExplainDiet(string firstName, StudentDietResponseDto? diet)
+    {
+        if (diet == null || diet.Meals.Count == 0)
+            return $"{firstName}, você ainda não tem uma dieta ativa. Quer criar um plano alimentar personalizado?";
+
+        var sb = new StringBuilder();
+        sb.AppendLine($"Resumo da sua dieta atual, {firstName}! 📊\n");
+        sb.AppendLine($"**Total:** {diet.TotalCalories}kcal/dia | **{diet.Meals.Count} refeições**\n");
+
+        foreach (var meal in diet.Meals.Take(5))
+        {
+            sb.AppendLine($"**{meal.MealTypeName}:**");
+            if (meal.Options.Count > 0)
+                foreach (var opt in meal.Options.Take(3))
+                    sb.AppendLine($"• {opt.FoodName} — {opt.Quantity} ({opt.Calories}kcal, {opt.Protein}g prot)");
+            else
+                sb.AppendLine("• Sem opções cadastradas");
+            sb.AppendLine();
+        }
+
+        return sb.ToString().Trim();
+    }
+
+    private static string BuildDefault(string firstName) =>
+        $"Oi, {firstName}! Posso te ajudar com seu treino e dieta aqui na Zyntra. 💪\n\n" +
+        "O que você deseja fazer?\n\n" +
+        "1️⃣ Meu treino\n" +
+        "2️⃣ Minha dieta\n" +
+        "3️⃣ Dicas de saúde e bem-estar\n" +
+        "4️⃣ Motivação e resultados\n\n" +
+        "Ou fale diretamente:\n" +
+        "• *\"Quero regenerar meu treino\"*\n" +
+        "• *\"Preciso de dicas de alimentação\"*\n" +
+        "• *\"Quero substituir um exercício\"*";
+
+    // ─── Diet templates ───────────────────────────────────────────────────────
+
+    private static (string name, string mealsJson, int calories) LoseWeightDietJson(bool veg)
+    {
+        var meals = new[]
+        {
+            new { mealType = 1, options = new[]
+            {
+                new { foodName = "Ovos mexidos", quantity = "2 unidades", calories = 140, protein = 12, carbs = 2, fat = 9 },
+                new { foodName = "Pão integral", quantity = "1 fatia", calories = 70, protein = 3, carbs = 13, fat = 1 },
+            }},
+            new { mealType = 2, options = new[]
+            {
+                new { foodName = veg ? "Tofu grelhado" : "Frango grelhado", quantity = "150g", calories = 160, protein = veg ? 16 : 32, carbs = veg ? 4 : 0, fat = 5 },
+                new { foodName = "Arroz integral", quantity = "4 colheres de sopa", calories = 140, protein = 3, carbs = 30, fat = 1 },
+                new { foodName = "Salada verde", quantity = "à vontade", calories = 30, protein = 2, carbs = 5, fat = 0 },
+            }},
+            new { mealType = 3, options = new[]
+            {
+                new { foodName = "Iogurte grego natural", quantity = "170g", calories = 100, protein = 17, carbs = 6, fat = 0 },
+                new { foodName = "Maçã", quantity = "1 unidade", calories = 80, protein = 0, carbs = 21, fat = 0 },
+            }},
+            new { mealType = 4, options = new[]
+            {
+                new { foodName = veg ? "Lentilha cozida" : "Peixe grelhado", quantity = "150g", calories = 160, protein = veg ? 13 : 30, carbs = veg ? 28 : 0, fat = 2 },
+                new { foodName = "Batata doce", quantity = "100g", calories = 90, protein = 2, carbs = 21, fat = 0 },
+                new { foodName = "Brócolis cozido", quantity = "100g", calories = 35, protein = 3, carbs = 7, fat = 0 },
+            }},
+        };
+        return ("Plano para Emagrecimento", JsonSerializer.Serialize(meals), 1005);
+    }
+
+    private static (string name, string mealsJson, int calories) GainMuscleDietJson(bool veg)
+    {
+        var meals = new[]
+        {
+            new { mealType = 1, options = new[]
+            {
+                new { foodName = "Ovos mexidos", quantity = "3 unidades", calories = 210, protein = 18, carbs = 3, fat = 14 },
+                new { foodName = "Pão integral", quantity = "2 fatias", calories = 140, protein = 6, carbs = 26, fat = 2 },
+                new { foodName = "Banana", quantity = "1 unidade", calories = 90, protein = 1, carbs = 23, fat = 0 },
+            }},
+            new { mealType = 2, options = new[]
+            {
+                new { foodName = veg ? "Grão-de-bico cozido" : "Frango grelhado", quantity = "200g", calories = veg ? 240 : 220, protein = veg ? 14 : 42, carbs = veg ? 40 : 0, fat = veg ? 4 : 5 },
+                new { foodName = "Arroz integral", quantity = "6 colheres de sopa", calories = 210, protein = 4, carbs = 45, fat = 1 },
+                new { foodName = "Feijão cozido", quantity = "1 concha", calories = 140, protein = 9, carbs = 25, fat = 1 },
+            }},
+            new { mealType = 3, options = new[]
+            {
+                new { foodName = "Batata doce", quantity = "150g", calories = 135, protein = 3, carbs = 31, fat = 0 },
+                new { foodName = veg ? "Iogurte grego" : "Frango grelhado", quantity = veg ? "200g" : "100g", calories = veg ? 120 : 110, protein = veg ? 20 : 21, carbs = veg ? 7 : 0, fat = veg ? 0 : 2 },
+            }},
+            new { mealType = 4, options = new[]
+            {
+                new { foodName = veg ? "Tofu grelhado" : "Carne vermelha magra", quantity = "200g", calories = veg ? 160 : 260, protein = veg ? 21 : 42, carbs = veg ? 4 : 0, fat = veg ? 8 : 10 },
+                new { foodName = "Arroz integral", quantity = "4 colheres de sopa", calories = 140, protein = 3, carbs = 30, fat = 1 },
+                new { foodName = "Legumes salteados", quantity = "100g", calories = 60, protein = 2, carbs = 12, fat = 1 },
+            }},
+            new { mealType = 5, options = new[]
+            {
+                new { foodName = "Queijo cottage", quantity = "200g", calories = 140, protein = 24, carbs = 8, fat = 2 },
+                new { foodName = "Castanhas", quantity = "20g", calories = 130, protein = 3, carbs = 3, fat = 12 },
+            }},
+        };
+        return ("Plano para Ganho de Massa", JsonSerializer.Serialize(meals), 2185);
+    }
+
+    private static (string name, string mealsJson, int calories) BalancedDietJson(bool veg)
+    {
+        var meals = new[]
+        {
+            new { mealType = 1, options = new[]
+            {
+                new { foodName = "Ovos mexidos", quantity = "2 unidades", calories = 140, protein = 12, carbs = 2, fat = 9 },
+                new { foodName = "Pão integral", quantity = "2 fatias", calories = 140, protein = 6, carbs = 26, fat = 2 },
+                new { foodName = "Fruta da estação", quantity = "1 unidade média", calories = 70, protein = 1, carbs = 18, fat = 0 },
+            }},
+            new { mealType = 2, options = new[]
+            {
+                new { foodName = veg ? "Feijão cozido" : "Frango grelhado", quantity = veg ? "2 conchas" : "180g", calories = veg ? 280 : 200, protein = veg ? 18 : 38, carbs = veg ? 50 : 0, fat = veg ? 2 : 4 },
+                new { foodName = "Arroz integral", quantity = "5 colheres de sopa", calories = 175, protein = 4, carbs = 37, fat = 1 },
+                new { foodName = "Salada variada", quantity = "à vontade", calories = 40, protein = 2, carbs = 8, fat = 0 },
+            }},
+            new { mealType = 3, options = new[]
+            {
+                new { foodName = "Iogurte grego natural", quantity = "170g", calories = 100, protein = 17, carbs = 6, fat = 0 },
+                new { foodName = "Castanhas", quantity = "30g", calories = 195, protein = 4, carbs = 4, fat = 19 },
+            }},
+            new { mealType = 4, options = new[]
+            {
+                new { foodName = veg ? "Omelete de legumes" : "Omelete", quantity = "3 ovos", calories = 210, protein = 18, carbs = veg ? 8 : 3, fat = 14 },
+                new { foodName = "Batata doce", quantity = "100g", calories = 90, protein = 2, carbs = 21, fat = 0 },
+                new { foodName = "Legumes no vapor", quantity = "100g", calories = 50, protein = 3, carbs = 10, fat = 0 },
+            }},
+        };
+        return ("Plano Alimentar Equilibrado", JsonSerializer.Serialize(meals), 1490);
     }
 
     // ─── Action execution ─────────────────────────────────────────────────────
@@ -316,31 +612,14 @@ public class AiChatService(
         };
     }
 
-    // ─── Translation helpers ─────────────────────────────────────────────────
+    // ─── Helpers ─────────────────────────────────────────────────────────────
 
-    private static string TranslateObjective(string? obj) => obj switch
-    {
-        "lose_weight" => "Emagrecer",
-        "gain_muscle" => "Ganhar massa muscular",
-        "get_toned" => "Definir corpo",
-        "health" => "Melhorar saúde",
-        "conditioning" => "Condicionamento físico",
-        _ => "Não informado",
-    };
+    private static string GetFirstName(string? fullName) =>
+        (fullName ?? "aluno").Split(' ', StringSplitOptions.RemoveEmptyEntries)[0];
 
-    private static string TranslateTime(string? t) => t switch
-    {
-        "morning" => "Manhã",
-        "afternoon" => "Tarde",
-        "evening" or "night" => "Noite",
-        _ => "Flexível",
-    };
+    private static bool HasAny(string source, params string[] terms) =>
+        terms.Any(t => source.Contains(t, StringComparison.OrdinalIgnoreCase));
 
-    private static string TranslateEnvironment(string? e) => e switch
-    {
-        "gym" => "Academia",
-        "home" => "Casa",
-        "both" => "Academia e Casa",
-        _ => "Não informado",
-    };
+    private static bool HasAll(string source, params string[] terms) =>
+        terms.All(t => source.Contains(t, StringComparison.OrdinalIgnoreCase));
 }

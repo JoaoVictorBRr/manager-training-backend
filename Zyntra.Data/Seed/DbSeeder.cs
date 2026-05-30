@@ -42,15 +42,6 @@ public static class DbSeeder
         context.Student.AddRange(maria, pedro, juliana);
         await context.SaveChangesAsync();
 
-        // === CLASSES ===
-        var muscClass = new Class { Modality = "Musculação", DateTime = now.AddDays(1).Date.AddHours(18), MaxCapacity = 20, AvailableSlots = 15, Unit = "Unidade Centro", InstructorId = carlos.Id, UserIdCreated = 0 };
-        var yogaClass = new Class { Modality = "Yoga", DateTime = now.AddDays(2).Date.AddHours(7), MaxCapacity = 15, AvailableSlots = 10, Unit = "Unidade Centro", InstructorId = ana.Id, UserIdCreated = 0 };
-        var funcClass = new Class { Modality = "Funcional", DateTime = now.AddDays(3).Date.AddHours(19), MaxCapacity = 20, AvailableSlots = 18, Unit = "Unidade Centro", InstructorId = carlos.Id, UserIdCreated = 0 };
-        var pilatesClass = new Class { Modality = "Pilates", DateTime = now.AddDays(4).Date.AddHours(10), MaxCapacity = 12, AvailableSlots = 8, Unit = "Unidade Centro", InstructorId = ana.Id, UserIdCreated = 0 };
-        var spinClass = new Class { Modality = "Spinning", DateTime = now.AddDays(5).Date.AddHours(6).AddMinutes(30), MaxCapacity = 15, AvailableSlots = 12, Unit = "Unidade Centro", InstructorId = carlos.Id, UserIdCreated = 0 };
-        context.Class.AddRange(muscClass, yogaClass, funcClass, pilatesClass, spinClass);
-        await context.SaveChangesAsync();
-
         // === WORKOUT SHEETS ===
         var mariaSheet = new WorkoutSheet { StudentId = maria.Id, InstructorId = carlos.Id, StartDate = now.AddMonths(-1), IsActive = true, Notes = "Treino A - Hipertrofia", UserIdCreated = 0 };
         var julianaSheet = new WorkoutSheet { StudentId = juliana.Id, InstructorId = ana.Id, StartDate = now.AddMonths(-1), IsActive = true, Notes = "Treino B - Emagrecimento", UserIdCreated = 0 };
@@ -72,13 +63,6 @@ public static class DbSeeder
         context.PhysicalAssessment.AddRange(
             new PhysicalAssessment { StudentId = maria.Id, AssessmentDate = now.AddMonths(-1), Weight = 65m, Height = 1.65m, Bmi = 23.88m, BodyFatPercentage = 25m, Measurements = null, Notes = "Avaliação inicial.", UserIdCreated = 0 },
             new PhysicalAssessment { StudentId = juliana.Id, AssessmentDate = now.AddMonths(-1), Weight = 72m, Height = 1.70m, Bmi = 24.91m, BodyFatPercentage = 30m, Measurements = null, Notes = "Avaliação inicial.", UserIdCreated = 0 }
-        );
-
-        // === SCHEDULES ===
-        context.Schedule.AddRange(
-            new Schedule { StudentId = maria.Id, ClassId = muscClass.Id, Status = ScheduleStatus.Confirmed, ReservationDate = now.AddDays(-2), UserIdCreated = 0 },
-            new Schedule { StudentId = maria.Id, ClassId = yogaClass.Id, Status = ScheduleStatus.Confirmed, ReservationDate = now.AddDays(-1), UserIdCreated = 0 },
-            new Schedule { StudentId = pedro.Id, ClassId = funcClass.Id, Status = ScheduleStatus.Confirmed, ReservationDate = now.AddDays(-1), UserIdCreated = 0 }
         );
 
         // === PAYMENTS ===
@@ -109,12 +93,6 @@ public static class DbSeeder
             new Notification { UserId = pedroUser.Id, Type = NotificationType.PaymentDue, Title = "Pagamento Pendente", Message = "Sua mensalidade vence em 3 dias.", SendDateTime = now.AddHours(-3), IsRead = false, UserIdCreated = 0 },
             new Notification { UserId = julianaUser.Id, Type = NotificationType.PaymentDue, Title = "Pagamento Vencido", Message = "Sua mensalidade está vencida há 5 dias. Regularize para continuar treinando.", SendDateTime = now.AddHours(-1), IsRead = false, UserIdCreated = 0 },
             new Notification { UserId = mariaUser.Id, Type = NotificationType.WorkoutReminder, Title = "Hora de Treinar", Message = "Não esqueça do seu treino hoje!", SendDateTime = now.AddHours(-4), IsRead = true, UserIdCreated = 0 }
-        );
-
-        // === PARTNER INTEGRATIONS ===
-        context.PartnerIntegration.AddRange(
-            new PartnerIntegration { PartnerName = "Gympass", IntegrationType = PartnerType.Gympass, Token = "GYMPASS-VALID-TOKEN-001", ValidationStatus = CheckInStatus.Approved, UserIdCreated = 0 },
-            new PartnerIntegration { PartnerName = "TotalPass", IntegrationType = PartnerType.TotalPass, Token = "TOTALPASS-VALID-TOKEN-001", ValidationStatus = CheckInStatus.Approved, UserIdCreated = 0 }
         );
 
         await context.SaveChangesAsync();

@@ -24,7 +24,8 @@ public class StudentProfileController(
     ICurrentUserService currentUserService,
     IUserRepository userRepository,
     IPhysicalAssessmentRepository assessmentRepository,
-    IWorkoutTemplateService workoutTemplateService) : ControllerBase
+    IWorkoutTemplateService workoutTemplateService,
+    IStudentDietService dietService) : ControllerBase
 {
     [HttpGet("me")]
     [SwaggerOperation(Summary = "Obter perfil do aluno autenticado")]
@@ -141,6 +142,15 @@ public class StudentProfileController(
         {
             var userId = currentUserService.GetCurrentUserId();
             await studentService.SaveOnboardingAsync(userId, dto);
+
+            var student = await studentService.GetByUserIdAsync(userId);
+            if (student != null)
+            {
+                var days = dto.TrainingDays ?? 4;
+                try { await workoutTemplateService.GenerateWorkoutAsync(student.Id, days); } catch { }
+                try { await dietService.GenerateDefaultDietAsync(student.Id, dto.Objective, dto.DietRestrictions); } catch { }
+            }
+
             return NoContent();
         }
         catch (InvalidOperationException ex)
